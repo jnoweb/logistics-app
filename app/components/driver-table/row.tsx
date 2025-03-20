@@ -5,7 +5,7 @@ export interface RowProps {
   row: Driver;
 }
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const Row: React.FC<RowProps> = ({ row }) => {
   const activeDays = getActiveDays(row.traces);
@@ -30,8 +30,8 @@ const Row: React.FC<RowProps> = ({ row }) => {
           ))}
         </div>
       </td>
-      {DAYS.map((day, index) => (
-        <td key={index} className="px-2 py-3 whitespace-nowrap text-center">
+      {DAYS.map((day) => (
+        <td key={day} className="px-2 py-3 whitespace-nowrap text-center">
           <ActivityCell isActive={activeDays.includes(day)} day={day} />
         </td>
       ))}
@@ -42,15 +42,29 @@ const Row: React.FC<RowProps> = ({ row }) => {
 export default Row;
 
 function totalDurationByType(traces: Trace[]) {
-  return traces?.flatMap((trace) => trace.activity || [])
+  const startDate = new Date("2021-02-01");
+  const endDate = new Date("2021-02-07");
+
+  return traces
+    .filter((trace) => {
+      const traceDate = new Date(trace.date);
+      return traceDate >= startDate && traceDate <= endDate;
+    })
+    .flatMap((trace) => trace.activity || [])
     .reduce<Record<string, number>>((acc, activity) => {
       acc[activity.type] = (acc[activity.type] || 0) + activity.duration;
       return acc;
-    }, {}) || {};
+    }, {});
 }
 
 function getActiveDays(traces: Trace[]) {
+  const startDate = new Date("2021-02-01");
+  const endDate = new Date("2021-02-07");
+
   return traces
-    ?.filter((trace) => trace.activity.length > 0)
-    .map((trace) => DAYS[new Date(trace.date).getDay()]);
+    .filter((trace) => {
+      const traceDate = new Date(trace.date);
+      return traceDate >= startDate && traceDate <= endDate;
+    })
+    .map((trace) => DAYS[(new Date(trace.date).getDay() + 6) % 7]);
 }
